@@ -166,6 +166,112 @@ ros2 run mypkg listener
 ### launch ファイルの作成
 launch file : 複数のノードを立ち上げることができる
 
+#### launch ファイルを作成して使えるようにするまでの最短手順
+1. パッケージのディレクトリに `launch` ディレクトリの作成
+    ```
+    mkdir launch
+    ```
+2. setup.py に launch ファイルの場所を記載
+    ```
+    import os
+    from glob import glob
+    ... 中略 ...
+    data_files = [
+    ... 中略 ...
+        (os.path.join('share', package_name), glob('launch/*.launch.py'))
+    ],
+    ```
+    `os.path.join(arg1, arg2)` は `arg1` のパスに `arg2` のパスを連結することができる。
+
+    `glob(arg1)` は正規表現で検索する。
+
+    `'launch/*.launch.py'` を検索することになる。
+
+3. `package.xml` に依存関係を記述
+    ```
+    <exec_depend>launch_ros</exec_depend>
+    ```
+
+4. `launch` ファイルの作成
+    ```
+    import launch
+    import launch.actions
+    import launch.substitutions
+    import launch_ros.actions
+
+    def generate_launch_description():
+        talker = launch_ros.actions.Node(
+            package='mypkg',
+            executable='talker',
+        )
+        listener = launch_ros.actions.Node(
+            package='mypkg',
+            executable='listener',
+            output='screen'
+        )
+        return launch.LaunchDescription([talker, listener])
+    ```
+
+5. `launch` ファイルを作成したら `colcon build` する。
+    ```
+    colcon build
+    ros2 launch mypkg talk_listen.launch.py
+    ```
+
+#### エラー対処
+##### name 'os' is not defined
+
+###### 原文
+
+```
+Traceback (most recent call last):s]
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/distutils/core.py", line 215, in run_setup
+    exec(f.read(), g) [mypkg - 0.4s]
+  File "<string>", line 14, in <module>
+NameError: name 'os' is not defined
+... 以下略 ...
+```
+
+###### 対処法
+`setup.py` に `import os` とか `from glob import glob` を書いてないのが原因。
+
+書け！
+
+##### Node.__init__() missing 1 required keyword-only argument: 'executable'
+
+###### 原文
+```
+[ERROR] [launch]: Caught exception in launch (see debug for traceback): Caught exception when trying to load file of format [py]: Node.__init__() missing 1 required keyword-only argument: 'executable'
+```
+
+###### 対処法
+
+わからん！
+
+いろんなサイトを歩き回って以下のことをした。
+
+1. `.launch.py` のインデントの数を見直した
+1. 余計な改行をなくした
+1. `colcon build` した
+1. パソコン自体を再起動した
+1. なぜか `ros2 launch hogepkg hogehoge.launch.py` できるようになった
+
+おそらく、`colcon build` する前後で `source ~/.bashrc` する必要があるのかも？
+
+### 独自のメッセージ型の作成
+
+パブリッシュするデータの型を作成する。
+
+以下を実行することで既存の型の一覧を表示することが可能。
+
+```
+ros2 interface list
+```
+
+~ ここまでで lesson 9 P.7 までの内容 ~
+
+
 
 
 
