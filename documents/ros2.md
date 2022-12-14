@@ -65,6 +65,7 @@ ros2 run rqt_graph rqt_graph
 ### ライセンスやメンテナーの設定
 package.xml だけでなく、setup.py も変更する。
 
+
 ### ~/.bashrc の追記
 ```
 source ~/ros2_ws/install/setup.bash
@@ -114,6 +115,8 @@ entry_points={
     #'listener = mypkg.llistener:main'
 ],
 ```
+これによって `mypkg.talker.py` および `mypkg.listener.py` は `def main():` を記述してその中に処理を書く必要がある。
+
 ##### 利用するパッケージを確認してインストール
 Ubuntu 22.04 : humble
 Ubuntu 20.04 : foxy
@@ -212,11 +215,15 @@ launch file : 複数のノードを立ち上げることができる
         return launch.LaunchDescription([talker, listener])
     ```
 
-5. `launch` ファイルを作成したら `colcon build` する。
+5. `launch` ファイルを作成したら `colcon build` する
     ```
     colcon build
+    ```
+1. `ros2 launch` する
+    ```
     ros2 launch mypkg talk_listen.launch.py
     ```
+    これを実行すると `executable` で指定したノードが同時に立ち上がる
 
 #### エラー対処
 ##### name 'os' is not defined
@@ -269,11 +276,267 @@ NameError: name 'os' is not defined
 ros2 interface list
 ```
 
-~ ここまでで lesson 9 P.7 までの内容 ~
+#### 型を定義するためだけのパッケージを作成する
+1. パッケージを作成する
+    ```
+    cd ~/ros2_ws/src
+    ros2 pkg create --build-type ament_cmake <PACKAGENAME_msgs>
+    ```
+
+    `PACKAGENAME_msgs` は方の名前にしておくとわかりやすくて良い。
+
+    また、パッケージを作成したので、`package.xml` の `description`, `maintainer`, `license` をちゃんと書く。
+    必要に応じて `test_depend` や `exec_depend`
+    - `test_depend` : テストに必要なパッケージ
+    - `exec_depend` : 実行に必要なパッケージ
+1. `msg` ディレクトリを作成する
+    ```
+    cd <PACKAGENAME_msgs>
+    mkdir msgs
+    ```
+1. `TYPENAME.msg` を作成し、型を定義する
+
+    以下は `Person.msg` という、人の情報を格納することを目的とした型を作成して例に上げる。
+    ```
+    string name
+    uint8 age
+    uint8 height
+    string like_food
+    ```
+    このようにすることで、各言語で使用可能なクラスが定義される。
+1. `CMakeList.txt` の編集
+    ```
+    find_package(ament_cmake REQUIRED)
+    # 以下を追加
+    find_package(rosidl_default_generators REQUIRED)
+    rosidl_generate_interfaces(${PROJECT_NAME})
+        "msg/Person.msg"
+    )
+    ```
+1. `package.xml` の編集
+    ```
+    <build_depend>rosidl_default_generators</build_depend>
+    <exec_depend>rosidl_default_runtime</exec_depend>
+    <member_of_group>rosidl_interface_packages</member_of_group>
+    ```
+1. ビルドして環境に反映
+    ```
+    cd ~/ros2_ws
+    colcon build
+    source ~/.bashrc
+    ```
+1. 型が利用できるようになっているか確認
+    ```
+    ros2 interface show person_msgs/msg/<TYPENAME>
+    ```
+    ##### エラー
+    ```
+    Unknown package `person_msgs`
+    ```
+    `person_msgs` パッケージがないと言っている。
+
+    自分は `colcon build`, `source ~/.bashrc` したら治った。
+
+    誤字とかしても同じエラーが出そう...
+
+#### 作成したメッセージを利用する
+他の型と使い方は対して変わらない
+```
+from <PACKAGENAME_msgs.msg> import <TYPENAME>
+```
+でインポートする。
+
+```
+pub = node.create_publisher(<TYPENAME>, "<TOPICNAME>", 10)
+```
+でパブリッシュする。
+
+また、スクリプトを書き換えたら `colcon build source ~/.bashrc` を忘れないこと！
+
+`talker` 側のお試し実行は以下でかんたんにできる。
+
+```
+ros2 topic echo <PACKAGENAME> <TALKER.py>
+```
+
+あと、どうせ `launch` ファイルを作成したのだから、`ros2 launch` でテスト実行するのも良し！
 
 
+### サービスの実行
+#### 概要
+`topic` はいつ `publish` しても良いし、いつ `subscribe` しても良い。
 
+ノード同士が干渉することはない。
 
+ではノード同士で直接やり取りがしたくなった場合はどうすればいいのか...
+
+そこで**サービス**というものが必要になってくる。
+
+##### 結局
+
+サービスとは、あるノードが別のノードに仕事を依頼する仕組みのこと。
+
+例えば
+
+人の名前を送ったら、年齢が返ってくるサービス
+
+この例を参考にサービスを作成してみる。
+
+#### 実装するサービス
+
+- 人の名前を送ったら、年齢が返ってくる
+    - `listener` が依頼される側
+    - `talker` が依頼する側
+
+#### サービスの作成
+0. 前提
+    - `<PACKAGENAME_msgs>` : person_msgs
+    - `<TYPENAME.msg>` : Person.msg
+1. `srv` ファイルの作成
+    パッケージルートに `srv` ディレクトリを作成する。
+
+    その中に `Query.srv` を作成する。
+
+    ```
+    string name
+    ---
+    uint8 age
+    ```
+
+    ここで `---` とは、サービスの渡す方と受け取る方を区別するための線として使用される。
+
+    依頼者目線でそれぞれの関係性を記述すると以下の通り
+    ```
+    こっち側に書いてあることを要求する
+    ---
+    するとこっちがわに書いてあることが返ってくる
+    ```
+
+    仕事者目線では
+    ```
+    こっち側の内容が要求されるので
+    ---
+    こっち側の内容を渡す
+    ```
+1. `CMakeList.txt` の編集
+    以下を追記
+    ```
+    rosidl_generate_interfaces(${PROJECT_NAME}
+        "msg/Person.msg"
+        "srv/Query.srv" # ← 追加
+    )
+1. ビルドして確認   
+    `colcon build source ~/.bashrc` した後に、以下を実行することで、正しく導入されているかどうかを確認することができる。
+
+    ```
+    ros2 interface show person_msgs/srv/Query
+    ```
+
+#### サービスのためのコールバック関数の実装（サーバの作成）
+基本的には、`Query` 型のメッセージを送受信する処理だと考えれば簡単。
+
+```
+from person_msgs.srv import Query
+```
+
+```
+srv = node.create_service(Query, "query", callback)
+```
+
+ただ `callback` 関数の書き方が、ひとひねりされている。
+
+サービスは、「何かを受け取ってそれに対応する何かを返す」という性質上、受取データと送信データの２つが必要になる。
+
+よって以下のような書き方になる。
+
+```
+def callback(request, response):
+    # request がクライアントからの要求データ
+    # それに対応するデータを入れた response を返す
+    if request.name == "俺の彼女":
+        response.age = 18
+    else:
+        response.age = 255
+    return response
+```
+
+##### 動作確認
+1. サービスノードを立ち上げる
+    ```
+    ros2 run mypkg talker.py
+    ```
+1. サービスが立ち上がっていることの確認
+    ```
+    ros2 service list
+    ```
+1. サービスにテキトーに要求してみる
+    ```
+    ros2 service call /query person_msgs/srv/Query "name: 俺の彼女"
+    ros2 service call /query person_msgs/srv/Query "name: クソ老害ジジィ"
+    ```
+
+##### エラー
+###### サービスが使用可能になるのを待っています
+```
+waiting for service to become available ...
+```
+サービスが立ち上がってない。
+
+`ros2 run` で立ち上げろ。
+
+#### ノードからサービスを呼び出す
+面倒なのでサンプルコードそのまま載せる。
+
+``` Python
+import rclpy
+from rclpy.node import Node
+from person_msgs.srv import Query
+
+def main():
+    rclpy.init()
+    node = Node("listener")
+    client = node.create_client(Query, 'query') # サービスクライアントの作成
+    while not client.wait_for_service(timeout_sec = 1.0):   # サービス待ち
+        node.get_logger().info('waiting ... ')
+
+    req = Query.Request()
+    req.name = "俺の彼女"
+    future = client.call_async(req) # 非同期でサービスを呼び出し
+    while rclpy.ok():
+        rclpy.spin_once(node)   # 一回だけサービスを呼び出したら終わる
+        if future.done():   # 終わってたら
+            try:
+                response = future.result()  # 結果を受取
+            except:
+                node.get_logger().info('Failure x_x ')
+            else:   # except じゃなかったら
+                node.get_logger().info("age: {}".format(response.age))
+
+            break   # exit while
+    node.destroy_node() # 削除
+    rclpy.shutdown()    # 停止
+
+if __name__ == '__main__':  # ライブラリを区別するための記法らしい
+    main()
+```
+
+##### 動作確認
+```
+ros2 run mypkg listener
+```
+```
+ros2 run mypkg talker
+```
+
+#### パラメータ・アクション
+トピック・サービスの他のデータや、処理の受け渡し方法。
+
+- パラメータ：定数やたまに変更するデータ（センサの周波数など）
+
+- アクション：サービスの長時間版（呼び出し側が途中経過の監視やキャンセルができる）
+    - ナビゲーション（目的地を指定して終わるまで待つ）
+    - マニピュレータの姿勢変更（最終的な姿勢を指定して終わるまで待つ）
+    - トピックやサービスを組み合わせて実装される
 
 
 

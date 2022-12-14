@@ -19,4 +19,5 @@ def generate_launch_description():
 
 # launch ファイルは .launch.py で終わることを setup.py に記述したので、
 # そのルールを守ってファイル名を決定する
+# ros2 launch mypkg talk_listen.launch.py を実行すると executable が同時に実行される？
 
