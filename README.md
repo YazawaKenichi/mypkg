@@ -1,5 +1,5 @@
 # mypkg
-
+[![test](https://github.com/YazawaKenichi/mypkg/actions/workflows/test.yaml/badge.svg)](https://github.com/YazawaKenichi/mypkg/actions/workflows/test.yaml)
 ## 概要
 このリポジトリは、千葉工業大学 未来ロボティクス学科 2022 年度 ロボットシステム学 の講義課題で作成した ROS2 パッケージです。
 
