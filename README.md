@@ -22,7 +22,7 @@ ros2 launch mypkg talk_listens.launch.py
 ```
 
 ## ノードとトピック
-![image](https://github.com/yazawakenichi/mypkg/tree/main/.pictures/rqt_graph.png)
+![image](https://github.com/YazawaKenichi/mypkg/blob/main/.pictures/rosgraph.png)
 
 ## ライセンス
 - このソフトウェアパッケージは、 MIT ライセンスのもと、再頒布および使用が許可されます。
