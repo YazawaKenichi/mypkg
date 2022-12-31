@@ -3,8 +3,6 @@
 ## 概要
 このリポジトリは、千葉工業大学 未来ロボティクス学科 2022 年度 ロボットシステム学 の講義課題で作成した ROS2 パッケージです。
 
-`talker.py` で数字をパブリッシュします `listener.py` でパブリッシュされた数字を取得します。
-
 |内容物|説明
 |:---:|:---
 |talker.py|実行直後に数字をカウントアップし、`countup` トピックにパブリッシュします。
@@ -16,11 +14,15 @@
 - ROS2 : humble
 
 ## 使用方法
+リポジトリをクローンし、ROS2 パッケージのセットアップ方法に従って、当パッケージをセットアップします。
+
+その後、以下で `listener.py` と `talker.py` ノードを同時に立ち上げます。
 ```
 ros2 launch mypkg talk_listens.launch.py
 ```
 
 ## ノードとトピック
+![image](https://github.com/yazawakenichi/mypkg/tree/main/.pictures/rqt_graph.png)
 
 ## ライセンス
 - このソフトウェアパッケージは、 MIT ライセンスのもと、再頒布および使用が許可されます。
