@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# coding : utf-8
+
 import launch
 import launch.actions
 import launch.substitutions
