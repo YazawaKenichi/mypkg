@@ -39,7 +39,7 @@
 
 その後、以下で `listener.py` と `talker.py` ノードを同時に立ち上げます。
 ```
-ros2 launch mypkg talk_listens.launch.py
+ros2 launch mypkg talk_listen.launch.py
 ```
 
 ## ノードとトピック
