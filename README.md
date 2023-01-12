@@ -34,10 +34,8 @@
     source ~/.bashrc
     ```
 
-## 使用方法
-リポジトリをクローンし、ROS2 パッケージのセットアップ方法に従って、当パッケージをセットアップします。
-
-その後、以下で `listener.py` と `talker.py` ノードを同時に立ち上げます。
+## 実行方法
+以下のコマンドを実行してで `listener.py` と `talker.py` ノードを同時に立ち上げる。
 ```
 ros2 launch mypkg talk_listen.launch.py
 ```
