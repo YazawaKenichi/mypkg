@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
+# SPDX-FileCopyrightText: KAWAHARA Shuji (2022)
+# SPDX-License-Identifier: MIT License
 
 import rclpy                     #ROS2のクライアントのためのライブラリ
 from rclpy.node import Node      #ノードを実装するためのNodeクラス（クラスは第10回で）
