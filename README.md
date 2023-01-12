@@ -13,6 +13,27 @@
 - OS : Ubuntu 22.04 jammy
 - ROS2 : humble
 
+## インストール
+1. このリポジトリのクローン
+    ```
+    cd ~/ros2_ws/src
+    git clone https://github.com/yazawakenichi/mypkg
+    ```
+1. パッケージのビルド
+    ```
+    cd ~/ros2_ws
+    colcon build
+    ```
+1. パッケージの実行可能ファイルを使えるようにするスクリプトを `~/.bashrc` 末行に追加
+    ```
+    echo 'source ~/ros2_ws/install/setup.bash' >> ~/.bashrc
+    echo 'source ~/ros2_ws/install/local_setup.bash' >> ~/.bashrc
+    ```
+1. `~/.bashrc` の変更を適用
+    ```
+    source ~/.bashrc
+    ```
+
 ## 使用方法
 リポジトリをクローンし、ROS2 パッケージのセットアップ方法に従って、当パッケージをセットアップします。
 
