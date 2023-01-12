@@ -42,6 +42,16 @@
 ros2 launch mypkg talk_listen.launch.py
 ```
 
+## 実行結果
+```
+[listener-2] [INFO] [1673535223.854988507] [listener]: Listen: 0
+[listener-2] [INFO] [1673535224.337194177] [listener]: Listen: 1
+[listener-2] [INFO] [1673535224.837239859] [listener]: Listen: 2
+[listener-2] [INFO] [1673535225.337852372] [listener]: Listen: 3
+[listener-2] [INFO] [1673535225.838144686] [listener]: Listen: 4
+[listener-2] [INFO] [1673535226.338456488] [listener]: Listen: 5
+```
+
 ## ノードとトピック
 ![image](https://github.com/YazawaKenichi/mypkg/blob/main/.pictures/rosgraph.png)
 
